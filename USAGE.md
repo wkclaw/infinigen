@@ -1,149 +1,302 @@
-# Infinigen Usage Guide (wkclaw fork)
+# Infinigen Usage Guide
 
-This fork includes macOS compatibility fixes for `customgt` and custom configs for generating scenes with animals on memory-constrained systems.
+This guide covers how to generate realistic 3D scenes with Infinigen, including animal-populated environments.
 
 ## Quick Start
 
-```bash
-conda activate infinigen
-
-# Desert scene with animals (16GB RAM safe)
-python -m infinigen.datagen.manage_jobs \
-    --output_folder outputs/my_scene --num_scenes 1 --specific_seed 0 \
-    --configs desert.gin animals_plants.gin \
-    --pipeline_configs local_16GB.gin monocular.gin opengl_gt.gin \
-    --pipeline_overrides LocalScheduleHandler.use_gpu=False
-```
-
-## Ground Truth Pipelines
-
-### blender_gt (CPU, no GPU required)
-Generates: RGB, Depth, SurfaceNormal, ObjectSegmentation, InstanceSegmentation, Flow.
-
-Does NOT generate 3D bounding boxes.
+Generate a scene with animals using our pre-configured setup:
 
 ```bash
---pipeline_configs local_16GB.gin monocular.gin blender_gt.gin
+# Basic animal scene generation
+python -m infinigen_examples.generate_nature \
+  --seed 0 \
+  --task coarse \
+  --output_folder outputs/my_animal_scene \
+  infinigen_examples/configs_nature/animals_plants.gin
+
+# Generate multiple camera views
+python -m infinigen_examples.generate_nature \
+  --seed 0 \
+  --task render \
+  --output_folder outputs/my_animal_scene \
+  infinigen_examples/configs_nature/animals_plants.gin
 ```
 
-### opengl_gt (requires GPU / Linux EGL)
-Generates everything from blender_gt PLUS:
-- 3D bounding boxes (`min`, `max`, `model_matrices` in Objects JSON)
-- Occlusion boundaries
-- Tag segmentation
-- 3D flow
+## Scene Types Available
+
+Infinigen includes several pre-built scene configurations:
+
+### Nature Scenes
+- `desert.gin` - Desert environments with cacti and desert plants
+- `plain.gin` - Open grasslands and plains  
+- `forest.gin` - Dense forest environments
+- `arctic.gin` - Snow and ice environments
+- `cliff.gin` - Rocky cliff and mountain scenes
+- `cave.gin` - Underground cave systems
+- `coastal.gin` - Beach and coastal environments
+
+### Custom Configurations
+- `animals_plants.gin` - Scenes with creatures and vegetation (optimized for 16GB RAM)
+- `custom_desert.gin` - Custom desert setup with specific parameters
+
+## Pipeline Configurations
+
+### blender_gt.gin
+Standard rendering pipeline that generates:
+- ✅ RGB images
+- ✅ Depth maps  
+- ✅ Segmentation masks
+- ✅ Surface normals
+- ❌ No 3D bounding boxes
 
 ```bash
---pipeline_configs local_16GB.gin monocular.gin opengl_gt.gin
+python -m infinigen_examples.generate_nature \
+  --seed 0 --task coarse \
+  --output_folder outputs/blender_scene \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  infinigen/datagen/configs/gt_options/blender_gt.gin
 ```
 
-**Note:** `opengl_gt` requires `customgt` binary. On Linux with EGL, it works out of the box. On macOS, see [macOS Fixes](#macos-customgt-fixes) below.
-
-### Extracting 3D Bounding Boxes (opengl_gt only)
+### opengl_gt.gin  
+Advanced pipeline with customgt (Linux + GPU required) that generates:
+- ✅ RGB images
+- ✅ Depth maps
+- ✅ Segmentation masks  
+- ✅ Surface normals
+- ✅ **3D bounding boxes** (key advantage)
 
 ```bash
-# List available object names
-python -m infinigen.tools.ground_truth.bounding_boxes_3d outputs/my_scene/0 48
-
-# Draw 3D boxes for specific objects
-python -m infinigen.tools.ground_truth.bounding_boxes_3d outputs/my_scene/0 48 --query rock
-python -m infinigen.tools.ground_truth.bounding_boxes_3d outputs/my_scene/0 48 --query herbivore
+# Requires Linux with EGL/GPU support
+python -m infinigen_examples.generate_nature \
+  --seed 0 --task coarse \
+  --output_folder outputs/opengl_scene \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  infinigen/datagen/configs/gt_options/opengl_gt.gin
 ```
-
-The Objects JSON (`frames/Objects/camera_0/Objects_*.json`) contains per-object:
-- `min` / `max`: object-space bounding box corners
-- `model_matrices`: 4x4 transformation matrices for each instance
-- `instance_ids`: unique IDs per instance
-
-## Scene Types
-
-Available in `infinigen_examples/configs_nature/scene_types/`:
-- `desert.gin` - sand, cacti, snakes
-- `plain.gin` - grassland, herbivores, carnivores, birds
-- `forest.gin` - dense trees, varied fauna
-- `mountain.gin`, `snowy_mountain.gin`, `arctic.gin`
-- `coast.gin`, `cliff.gin`, `cave.gin`, `river.gin`
-
-## Creature Factories
-
-| Factory | Type | Notes |
-|---------|------|-------|
-| `HerbivoreFactory` | Ground | Deer-like animals. Set `hair=False` to avoid crash. |
-| `CarnivoreFactory` | Ground | Predators. Set `hair=False` to avoid crash. |
-| `BirdFactory` | Ground | Ground birds |
-| `FlyingBirdFactory` | Flying | Birds in flight |
-| `SnakeFactory` | Ground | Snakes |
-| `BeetleFactory` | Ground | Insects |
-| `CrabFactory` | Ground | Crustaceans |
-
-## Custom Configs (this fork)
-
-### animals_plants.gin
-Scene config with creatures enabled, optimized for 16GB RAM:
-- Creatures: HerbivoreFactory, CarnivoreFactory, BirdFactory, FlyingBirdFactory, SnakeFactory
-- Hair disabled (avoids `NotImplementedError: Dynamic hair`)
-- Monocots, ferns, ground leaves disabled (RAM savings)
-- Caves disabled (hangs on macOS)
-- Resolution: 1280x720, 1024 samples
-
-### custom_desert.gin
-Desert scene with reduced scatter and moderate quality.
 
 ### blender_gt_savemesh.gin
-Pipeline config combining blender_gt + savemesh step.
+Custom pipeline configuration for mesh extraction workflows.
 
-## Performance Tuning
+## Resolution and Performance Tuning
 
-### Resolution and Samples
-```gin
-execute_tasks.generate_resolution = (1280, 720)   # default: (1280, 720)
-configure_render_cycles.num_samples = 1024         # default: 8192
+### Key Parameters
+
+```bash
+# High quality (slow, high memory)
+--gin_param="generate_resolution=(1920, 1080)"
+--gin_param="num_samples=512" 
+
+# Balanced (recommended for 16GB systems)
+--gin_param="generate_resolution=(1280, 720)"  
+--gin_param="num_samples=256"
+
+# Fast preview (quick iterations)
+--gin_param="generate_resolution=(640, 480)"
+--gin_param="num_samples=64"
 ```
 
-### Memory (16GB systems)
+### Memory Optimization for 16GB Systems
+
+The `animals_plants.gin` config includes these RAM-saving optimizations:
+
 ```gin
-# Reduce view distance
-compose_nature.inview_distance = 25
-placement.populate_all.dist_cull = 25
+# Disable memory-heavy features
+monocots.MomocotsFactory.factory_seed_map = {}
+caves.CavesFactory.factory_seed_map = {} 
+caves_chance = 0.0
 
-# Disable heavy vegetation
-compose_nature.monocots_chance = 0.0
-compose_nature.ferns_chance = 0.0
-compose_nature.ground_leaves_chance = 0.0
+# Reduce vegetation density
+populate_plants.PlantPopulationParams.density_per_km2 = 10000  # reduced from default
 
-# Disable caves (can hang)
-scene.caves_chance = 0.0
-
-# Lower mesh detail
-OpaqueSphericalMesher.pixels_per_cube = 3
-target_face_size.global_multiplier = 1.5
+# Disable hair rendering for creatures (major RAM saver)
+hair = False
 ```
 
-### Typical Timings (16GB Mac, CPU only, 1280x720)
-- Coarse: ~2 min
-- Populate: ~5 min
-- Render (1 frame, 1024 samples): ~5-10 min
-- blender_gt: ~2 min
-- **Total per frame: ~15-20 min**
+## Extracting 3D Bounding Boxes
 
-## macOS customgt Fixes
+### Official Tool (Recommended)
+Use Infinigen's built-in bounding box extraction:
 
-This fork includes fixes for running `customgt` on macOS (Metal/OpenGL translation layer):
+```bash
+# Extract bounding boxes for all objects in frame 0
+python -m infinigen.tools.ground_truth.bounding_boxes_3d \
+  outputs/my_scene \
+  0 \
+  --query "all"
 
-1. **SYSTEM_NUM branch fix** (`main.cpp` line 264): Changed `#elif SYSTEM_NUM == 0` to `#elif SYSTEM_NUM == 1` to enable GLFW code path on macOS.
+# Extract bounding boxes for specific object types
+python -m infinigen.tools.ground_truth.bounding_boxes_3d \
+  outputs/my_scene \
+  0 \
+  --query "creatures"
 
-2. **GLSL version downgrade**: All 9 shader files (`glsl/*.vert/*.frag/*.geom`) changed from `#version 440 core` to `#version 410 core` (macOS max OpenGL 4.1).
+python -m infinigen.tools.ground_truth.bounding_boxes_3d \
+  outputs/my_scene \
+  0 \
+  --query "plants"
+```
 
-3. **Bool in shader interface blocks**: Changed `bool has_flow` to `float has_flow` in shader varying blocks (GLSL 4.10 limitation).
+### Requirements
+- Only works with scenes generated using `opengl_gt.gin` pipeline
+- Requires the customgt rendering backend
+- Linux with EGL/GPU support recommended
 
-4. **Non-fatal GL errors** (`src/utils.cpp`): `glCheckError` changed from throw to warning (macOS GL errors are often non-fatal).
+## Available Creature Factories
 
-### Known Issue
-`GL_LINES_ADJACENCY` draw calls return `GL_INVALID_VALUE` on macOS due to Metal translation layer limitations. The customgt rendering output may be blank/incorrect. **For production use, run opengl_gt on Linux with EGL support.**
+Infinigen includes several creature types you can populate scenes with:
 
-## Camera Data Format
+### Mammals
+- `CarnivoreFactory` - Predators like wolves, big cats
+- `HerbivoreFactory` - Prey animals like deer, rabbits
 
-- Intrinsics `K`: 3x3 pinhole matrix
-- Extrinsics `T`: 4x4 camera-to-world matrix
-- Coordinate system: +X right, +Y down, +Z forward (CV convention)
-- Stored in `frames/camview/camera_0/camview_*.npz`
+### Birds  
+- `BirdFactory` - Ground birds and general avian species
+- `FlyingBirdFactory` - Birds with flight animations
+
+### Other Creatures
+- `SnakeFactory` - Various snake species
+- `BeetleFactory` - Insect creatures
+- `CrabFactory` - Crustaceans
+
+### Enabling Creatures in Custom Configs
+
+```gin
+# Enable specific creature types
+creatures_chance = 1.0
+CarnivoreFactory.factory_seed_map = {0: 23}
+HerbivoreFactory.factory_seed_map = {0: 24, 1: 25}
+BirdFactory.factory_seed_map = {0: 26}
+```
+
+## Key Configuration Overrides
+
+### For macOS Users
+```bash
+--gin_param="caves_chance=0.0"  # Avoid cave generation compatibility issues  
+--gin_param="hair=False"        # Disable hair rendering (reduces crashes)
+```
+
+### Common Overrides
+```bash
+# Increase creature population
+--gin_param="creatures_chance=1.0"
+
+# Adjust lighting
+--gin_param="lighting_energy=2.0"
+
+# Control terrain size  
+--gin_param="terrain_scale=10.0"
+
+# Set specific weather
+--gin_param="weather='cloudy'"
+```
+
+## macOS Compatibility Notes
+
+### OpenGL Issues
+The `opengl_gt` pipeline's customgt component has compatibility issues on macOS due to Metal translation layer limitations:
+
+- **Issue**: `GL_LINES_ADJACENCY` not properly supported
+- **Symptoms**: Rendering crashes or artifacts with customgt
+- **Fix Applied**: This fork includes fixes for macOS compatibility:
+  - SYSTEM_NUM branch with updated shaders  
+  - GLSL 4.10 compatibility
+  - Non-fatal `glCheckError` handling
+
+### Recommended Setup for macOS
+1. Use `blender_gt.gin` for most workflows (more stable)
+2. Use Linux systems for `opengl_gt.gin` and 3D bbox extraction
+3. Apply the gin overrides: `caves_chance=0.0` and `hair=False`
+
+For full `opengl_gt` support with 3D bounding boxes, use a Linux system with EGL.
+
+## Example Commands
+
+### Generate a Desert Scene with Animals
+```bash
+python -m infinigen_examples.generate_nature \
+  --seed 42 \
+  --task coarse \
+  --output_folder outputs/desert_animals \
+  infinigen_examples/configs_nature/custom_desert.gin \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  --gin_param="generate_resolution=(1280, 720)" \
+  --gin_param="creatures_chance=1.0" \
+  --gin_param="hair=False"
+```
+
+### Generate with 3D Bounding Boxes (Linux Only)
+```bash
+# Step 1: Generate scene structure
+python -m infinigen_examples.generate_nature \
+  --seed 100 \
+  --task coarse \
+  --output_folder outputs/bbox_scene \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  infinigen/datagen/configs/gt_options/opengl_gt.gin
+
+# Step 2: Render with ground truth
+python -m infinigen_examples.generate_nature \
+  --seed 100 \
+  --task render \
+  --output_folder outputs/bbox_scene \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  infinigen/datagen/configs/gt_options/opengl_gt.gin
+
+# Step 3: Extract bounding boxes
+python -m infinigen.tools.ground_truth.bounding_boxes_3d \
+  outputs/bbox_scene \
+  0 \
+  --query "all"
+```
+
+### Quick Preview Generation
+```bash
+python -m infinigen_examples.generate_nature \
+  --seed 1 \
+  --task coarse \
+  --output_folder outputs/preview \
+  infinigen_examples/configs_nature/animals_plants.gin \
+  --gin_param="generate_resolution=(640, 480)" \
+  --gin_param="num_samples=64" \
+  --gin_param="hair=False"
+```
+
+## Troubleshooting
+
+### Memory Issues
+- Reduce `generate_resolution`
+- Lower `num_samples` 
+- Set `hair=False`
+- Use `animals_plants.gin` (pre-optimized)
+- Set `caves_chance=0.0`
+
+### Rendering Crashes
+- Try `blender_gt.gin` instead of `opengl_gt.gin`
+- On macOS: always use `hair=False` and `caves_chance=0.0`
+- Ensure adequate GPU memory for high resolutions
+
+### Missing 3D Bounding Boxes
+- Verify you're using `opengl_gt.gin` pipeline
+- Confirm scene was generated with customgt enabled
+- Check that extraction tool targets correct scene folder
+
+## Output Structure
+
+After generation, your output folder will contain:
+
+```
+outputs/my_scene/
+├── fine/
+│   ├── Image0001.png          # RGB render
+│   ├── Depth0001.exr          # Depth map  
+│   ├── Segmentation0001.png   # Object masks
+│   ├── SurfaceNormals0001.exr # Normal maps
+│   └── bbox_3d.npz           # 3D bounding boxes (opengl_gt only)
+├── coarse/
+│   └── scene.blend           # Blender scene file
+└── logs/
+    └── generate.log          # Generation logs
+```
+
+For more advanced usage, see the official Infinigen documentation and the examples in `infinigen_examples/`.
