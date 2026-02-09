@@ -1,0 +1,29 @@
+# Custom desert config: higher res, reduced scatter, no small rocks
+include 'infinigen_examples/configs_nature/scene_types/desert.gin'
+
+# Resolution: 1280x720, safe for 16GB RAM
+execute_tasks.generate_resolution = (1280, 720)
+
+# Render quality: moderate (avoid OOM)
+configure_render_cycles.num_samples = 1024
+configure_render_cycles.min_samples = 64
+
+# Mesh detail: moderate
+OpaqueSphericalMesher.pixels_per_cube = 3
+TransparentSphericalMesher.pixels_per_cube = 3
+target_face_size.global_multiplier = 1.5
+
+# Disable small scattered rocks/pebbles on ground
+compose_nature.rocks_chance = 0.0
+compose_nature.glowing_rocks_chance = 0.0
+
+# Keep boulders but reduce density
+compose_nature.boulders_chance = 0.3
+
+# View distance
+compose_nature.inview_distance = 40
+placement.populate_all.dist_cull = 40
+compose_nature.near_distance = 15
+compose_nature.center_distance = 25
+
+# Keep trees, cactus, creatures from desert.gin defaults

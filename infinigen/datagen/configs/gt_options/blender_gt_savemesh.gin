@@ -1,0 +1,7 @@
+# blender_gt + savemesh: get both Blender GT passes and mesh data for 3D bbox
+iterate_scene_tasks.camera_dependent_tasks = [
+    {'name': 'rendershort', 'func': @rendershort/queue_render}, 
+    {'name': 'renderbackup', 'func': @renderbackup/queue_render, 'condition': 'prev_failed'}, 
+    {'name': 'savemesh', 'func': @queue_mesh_save},
+    {'name': 'blendergt', 'func': @ground_truth/queue_render}
+]

@@ -1,6 +1,6 @@
 // FRAGMENT SHADER
 
-#version 440 core
+#version 410 core
 
 uniform int object_index;
 

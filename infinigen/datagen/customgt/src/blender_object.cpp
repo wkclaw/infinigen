@@ -220,8 +220,22 @@ void MeshBlenderObject::draw(Shader &shader) const
     const auto t1 = std::chrono::high_resolution_clock::now();
     shader.setInt("object_index", info.index);
     glBindVertexArray(VAO);
+    std::cerr << "DEBUG draw: num_verts=" << num_verts << " num_instances=" << num_instances
+              << " num_verts%4=" << (num_verts % 4) << std::endl;
     glDrawElementsInstanced(GL_LINES_ADJACENCY, num_verts, GL_UNSIGNED_INT, 0, num_instances);
-    glCheckError();
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "GL error after draw: 0x" << std::hex << err << std::dec << std::endl;
+        // Try with GL_TRIANGLES as fallback test
+        std::cerr << "Trying GL_TRIANGLES fallback..." << std::endl;
+        glDrawElementsInstanced(GL_TRIANGLES, num_verts, GL_UNSIGNED_INT, 0, num_instances);
+        GLenum err2 = glGetError();
+        if (err2 != GL_NO_ERROR) {
+            std::cerr << "GL_TRIANGLES also failed: 0x" << std::hex << err2 << std::dec << std::endl;
+        } else {
+            std::cerr << "GL_TRIANGLES succeeded! Lines adjacency is the issue." << std::endl;
+        }
+    }
     total_elapsed_drawing += (std::chrono::high_resolution_clock::now() - t1);
     glBindVertexArray(0);
 }

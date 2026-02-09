@@ -8,7 +8,7 @@
 #include "io.hpp"
 
 struct InstanceID {
-    const int n1, n2, n3;
+    int n1, n2, n3;
 };
 
 inline bool operator==(const InstanceID& lhs, const InstanceID& rhs)

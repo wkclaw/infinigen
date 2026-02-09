@@ -1,6 +1,6 @@
 // FRAGMENT SHADER
 
-#version 440 core
+#version 410 core
 
 in vec3 interp_pos_cc;
 in vec3 interp_pos_cc_next;

@@ -1,4 +1,4 @@
-#version 440 core
+#version 410 core
 
 layout (lines_adjacency) in;
 layout (triangle_strip, max_vertices = 6) out;
@@ -8,10 +8,10 @@ out vec3 interp_pos_cc;
 out vec3 interp_pos_cc_next;
 out float tri_area;
 out float px_area;
-out float has_flow;
-out ivec3 face_id;
-out ivec3 instance_id;
-out ivec3 tag;
+flat out float has_flow;
+flat out ivec3 face_id;
+flat out ivec3 instance_id;
+flat out ivec3 tag;
 
 uniform mat4 cc2img;
 
@@ -19,7 +19,7 @@ in VS_OUT {
     vec3 pos_wc;
     vec3 pos_cc;
     vec3 pos_cc_next;
-    bool has_flow;
+    float has_flow;
     int vertex_id;
     ivec3 instance_id;
     int tag;
@@ -43,7 +43,7 @@ void main() {
     face_id = ivec3(gs_in[0].vertex_id, gs_in[1].vertex_id, gs_in[2].vertex_id);
     instance_id = gs_in[0].instance_id;
 
-    has_flow = float(gs_in[0].has_flow && gs_in[1].has_flow && gs_in[2].has_flow && gs_in[3].has_flow);
+    has_flow = gs_in[0].has_flow * gs_in[1].has_flow * gs_in[2].has_flow * gs_in[3].has_flow;
 
     vec3 v1 = gs_in[0].pos_cc; // expecting that cc is in opencv [Y down Z forward]
     vec3 v2 = gs_in[1].pos_cc;

@@ -1,6 +1,6 @@
 // VERTEX SHADER
 
-#version 440 core
+#version 410 core
 
 layout (location = 0) in mat4 instanceMatrix;
 layout (location = 4) in mat4 instanceMatrixNext;
@@ -24,7 +24,7 @@ out VS_OUT {
     vec3 pos_wc;
     vec3 pos_cc;
     vec3 pos_cc_next;
-    bool has_flow;
+    float has_flow;
     int vertex_id;
     ivec3 instance_id;
     int tag;
@@ -41,7 +41,7 @@ void main() {
     vec4 pos_cc_opengl = view * pos_wc_opengl;
     vs_out.pos_cc = pdiv(opengl_to_cv * pos_cc_opengl);
 
-    vs_out.has_flow = (abs(instanceMatrixNext[3][3]) > 1e-4);
+    vs_out.has_flow = (abs(instanceMatrixNext[3][3]) > 1e-4) ? 1.0 : 0.0;
 
     vec4 pos_wc_next = instanceMatrixNext * vec4(aPos_next, 1.0);
     vec4 pos_cc_next = opengl_to_cv * viewNext * pos_wc_next;

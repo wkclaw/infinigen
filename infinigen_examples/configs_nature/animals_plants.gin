@@ -1,0 +1,67 @@
+# Animals + Plants scene config
+# Resolution safe for 16GB RAM, with creatures enabled
+
+# Resolution
+execute_tasks.generate_resolution = (1280, 720)
+
+# Render: moderate quality
+configure_render_cycles.num_samples = 1024
+configure_render_cycles.min_samples = 64
+
+# Mesh detail: moderate (save RAM)
+OpaqueSphericalMesher.pixels_per_cube = 3
+TransparentSphericalMesher.pixels_per_cube = 3
+target_face_size.global_multiplier = 1.5
+
+# Creatures: ENABLED, high chance
+compose_nature.ground_creatures_chance = 1.0
+compose_nature.flying_creatures_chance = 0.5
+compose_nature.max_ground_creatures = 5
+compose_nature.max_flying_creatures = 3
+
+# Ground creatures: mix of animals
+compose_nature.ground_creature_registry = [
+    (@CarnivoreFactory, 1),
+    (@HerbivoreFactory, 1.5),
+    (@BirdFactory, 0.5),
+    (@SnakeFactory, 0.5),
+]
+
+# Flying creatures
+compose_nature.flying_creature_registry = [
+    (@FlyingBirdFactory, 1),
+]
+
+# Disable small scattered rocks/pebbles
+compose_nature.rocks_chance = 0.0
+compose_nature.glowing_rocks_chance = 0.0
+compose_nature.boulders_chance = 0.3
+
+# View distance (reduced for 16GB RAM)
+compose_nature.inview_distance = 25
+placement.populate_all.dist_cull = 25
+compose_nature.near_distance = 10
+compose_nature.center_distance = 15
+
+# Disable particles and heavy vegetation that eat RAM
+compose_nature.rain_particles_chance = 0.0
+compose_nature.snow_particles_chance = 0.0
+compose_nature.dust_particles_chance = 0.0
+compose_nature.monocots_chance = 0.0
+compose_nature.ferns_chance = 0.0
+compose_nature.ground_leaves_chance = 0.0
+compose_nature.ground_twigs_chance = 0.0
+compose_nature.chopped_trees_chance = 0.0
+compose_nature.grass_chance = 0.3
+compose_nature.bush_chance = 0.3
+compose_nature.trees_chance = 0.5
+
+# Disable caves (hangs on macOS)
+scene.caves_chance = 0.0
+
+# Faster terrain
+run_erosion.n_iters = [1,1]
+
+# Fix creature hair crash
+HerbivoreFactory.hair = False
+CarnivoreFactory.hair = False

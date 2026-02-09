@@ -1,6 +1,6 @@
 // FRAGMENT SHADER
 
-#version 440 core
+#version 410 core
 
 layout (location = 0) out ivec4 rasterized_occ_bounds;
 
