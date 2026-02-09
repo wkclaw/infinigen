@@ -1,6 +1,6 @@
 # Infinigen Usage Guide
 
-This guide covers how to generate realistic 3D scenes with Infinigen, including animal-populated environments.
+Custom configs and usage notes for generating 3D scenes with animals. Use `opengl_gt` pipeline on Linux for 3D bounding box ground truth.
 
 ## Quick Start
 
@@ -191,24 +191,10 @@ BirdFactory.factory_seed_map = {0: 26}
 --gin_param="weather='cloudy'"
 ```
 
-## macOS Compatibility Notes
+## Platform Notes
 
-### OpenGL Issues
-The `opengl_gt` pipeline's customgt component has compatibility issues on macOS due to Metal translation layer limitations:
-
-- **Issue**: `GL_LINES_ADJACENCY` not properly supported
-- **Symptoms**: Rendering crashes or artifacts with customgt
-- **Fix Applied**: This fork includes fixes for macOS compatibility:
-  - SYSTEM_NUM branch with updated shaders  
-  - GLSL 4.10 compatibility
-  - Non-fatal `glCheckError` handling
-
-### Recommended Setup for macOS
-1. Use `blender_gt.gin` for most workflows (more stable)
-2. Use Linux systems for `opengl_gt.gin` and 3D bbox extraction
-3. Apply the gin overrides: `caves_chance=0.0` and `hair=False`
-
-For full `opengl_gt` support with 3D bounding boxes, use a Linux system with EGL.
+- **Linux (recommended)**: Use `opengl_gt.gin` for full 3D bounding box support via customgt + EGL.
+- **macOS**: customgt has `GL_LINES_ADJACENCY` compatibility issues with the Metal translation layer. Use `blender_gt.gin` on macOS (no 3D bbox). For 3D bbox, run on Linux.
 
 ## Example Commands
 

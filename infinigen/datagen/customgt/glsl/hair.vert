@@ -1,6 +1,6 @@
 // VERTEX SHADER
 
-#version 410 core
+#version 440 core
 
 layout (location = 0) in mat4 instanceMatrix;
 layout (location = 4) in mat4 instanceMatrixNext;

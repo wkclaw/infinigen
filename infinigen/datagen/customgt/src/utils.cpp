@@ -52,9 +52,8 @@ void glCheckError_(const char *file, int line)
             error = "INVALID_FRAMEBUFFER_OPERATION";
             break;
         }
-        std::cout << "WARNING: " << error << " | " << file << " (" << line << ")" << std::endl;
-        // On macOS, some GL errors are non-fatal; continue instead of throwing
-        // throw std::runtime_error(error + " | " + file + " (" + std::to_string(line) + ")\n");
+        std::cout << error << " | " << file << " (" << line << ")" << std::endl;
+        throw std::runtime_error(error + " | " + file + " (" + std::to_string(line) + ")\n");
     }
 }
 
@@ -78,6 +77,6 @@ const std::vector<loop_obj> image_iterator(const int width, const int height,
     }
     assert(current_idx == num_elements);
     assert(num_elements == output.size());
-    // assert(output.back().progbar); // Removed: progbar member doesn't exist in loop_obj
+    assert(output.back().progbar);
     return output;
 }
