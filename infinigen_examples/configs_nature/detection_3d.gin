@@ -1,0 +1,72 @@
+# detection_3d.gin
+# Config for generating diverse 3D bounding box training data.
+# Use with any scene type: plain.gin, forest.gin, desert.gin, etc.
+# Pipeline: opengl_gt.gin (required for 3D bbox)
+
+# -- Resolution & Render --
+execute_tasks.generate_resolution = (1280, 720)
+configure_render_cycles.num_samples = 1024
+
+# -- Camera Intrinsics (focal length distribution) --
+# Covers wide-angle to telephoto, weighted toward standard view
+camera.camera_pose_proposal.focal_length = ("weighted_choice",
+    (0.50, ("clip_gaussian", 35, 8, 24, 50)),
+    (0.20, ("clip_gaussian", 24, 3, 18, 30)),
+    (0.20, ("clip_gaussian", 75, 15, 55, 120)),
+    (0.10, ("clip_gaussian", 16, 2, 14, 20)),
+)
+
+# -- Camera Extrinsics --
+# 60% eye-level, 20% aerial, 10% ground-level, 10% high aerial
+camera.camera_pose_proposal.altitude = ("weighted_choice",
+    (0.60, ("clip_gaussian", 1.7, 0.3, 0.5, 3)),
+    (0.20, ("clip_gaussian", 20, 8, 5, 40)),
+    (0.10, ("clip_gaussian", 0.3, 0.1, 0.15, 0.5)),
+    (0.10, ("clip_gaussian", 50, 10, 30, 80)),
+)
+
+camera.camera_pose_proposal.pitch = ("clip_gaussian", 90, 30, 20, 160)
+
+# -- View Distance --
+compose_nature.inview_distance = 100
+placement.populate_all.dist_cull = 100
+compose_nature.near_distance = 30
+compose_nature.center_distance = 50
+
+# -- Creatures (all on) --
+compose_nature.ground_creatures_chance = 1.0
+compose_nature.flying_creatures_chance = 0.7
+compose_nature.max_ground_creatures = 8
+compose_nature.max_flying_creatures = 5
+
+# Creature hair disabled (crashes with NotImplementedError)
+HerbivoreFactory.hair = False
+CarnivoreFactory.hair = False
+
+# -- Vegetation --
+# Keep trees and bushes, disable small ground cover (not detection targets)
+compose_nature.trees_chance = 0.85
+compose_nature.bushes_chance = 0.7
+compose_nature.boulders_chance = 0.5
+compose_nature.cactus_chance = 0.5
+
+compose_nature.monocots_chance = 0.0
+compose_nature.ferns_chance = 0.0
+compose_nature.ground_leaves_chance = 0.0
+compose_nature.ground_twigs_chance = 0.0
+compose_nature.chopped_trees_chance = 0.0
+compose_nature.flowers_chance = 0.0
+compose_nature.rain_particles_chance = 0.0
+compose_nature.dust_particles_chance = 0.0
+compose_nature.snow_particles_chance = 0.0
+
+# -- Caves disabled (hangs on some systems) --
+scene.caves_chance = 0.0
+
+# -- Render settings (stereo-inspired) --
+# Disable volume scatter (corrupts depth map)
+atmosphere_light_haze.shader_atmosphere.enable_scatter = False
+water.shader.enable_scatter = False
+compositor_postprocessing.distort = False
+configure_blender.motion_blur = False
+render_image.use_dof = False
