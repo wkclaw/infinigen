@@ -1,6 +1,7 @@
 # detection_3d.gin
-# Config for generating diverse 3D bounding box training data.
-# Use with any scene type: plain.gin, forest.gin, desert.gin, etc.
+# Config for generating diverse 3D bounding box training data (LAND scenes only).
+# Use with: plain.gin, forest.gin, desert.gin, mountain.gin, cliff.gin, etc.
+# Do NOT use with underwater scenes (under_water/coral_reef/kelp_forest).
 # Pipeline: opengl_gt.gin (required for 3D bbox)
 
 # -- Resolution & Render --
@@ -59,9 +60,6 @@ compose_nature.flowers_chance = 0.0
 compose_nature.rain_particles_chance = 0.0
 compose_nature.dust_particles_chance = 0.0
 compose_nature.snow_particles_chance = 0.0
-
-# -- Caves disabled (hangs on some systems) --
-scene.caves_chance = 0.0
 
 # -- Render settings (stereo-inspired) --
 # Disable volume scatter (corrupts depth map)
